@@ -93,6 +93,34 @@ def update_credential(credentials: list[dict[str, str]]) -> None:
     print("Credential updated successfully.")
 
 
+def view_credential(credentials: list[dict[str, str]]) -> None:
+    """View a credential by service name."""
+    service = input("Enter the service name of the credential to view: ").strip()
+    if not service:
+        print("Error: Service name is required.")
+        return
+    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
+    if not found_credentials:
+        print(f"No credentials found for service: {service}")
+        return
+    elif len(found_credentials) == 1:
+        credential = found_credentials[0]
+    else:
+        print("Multiple credentials found for this service:")
+        for i, cred in enumerate(found_credentials, start=1):
+            print(f"  {i}. Username: {cred['username']}")
+        try:
+            index = int(input("Enter the number of the credential to view: ")) - 1
+            if index < 0 or index >= len(found_credentials):
+                print("Not in the list.")
+                return
+            credential = found_credentials[index]
+        except ValueError:
+            print("Invalid selection.")
+            return
+    print(f"Service: {credential['service']}, Username: {credential['username']}, Password: {credential['password']}")
+
+
 def main() -> None:
     """Run the menu until the user exits."""
     credentials = []
@@ -112,7 +140,7 @@ def main() -> None:
         elif choice == "5":
             update_credential(credentials)
         elif choice == "6":
-            print("Not developed yet.")
+            view_credential(credentials)
         elif choice == "0":
             print("Goodbye!")
             break
