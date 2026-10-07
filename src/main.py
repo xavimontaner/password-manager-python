@@ -1,3 +1,7 @@
+import secrets
+import string
+
+
 def display_menu() -> None:
     """Display the available password manager actions."""
     print("\nPassword Manager")
@@ -26,6 +30,26 @@ def list_credentials(credentials: list[dict[str, str]]) -> None:
             print(f"{number}. Service: {credential['service']}, Username: {credential['username']}, Password: ********")
 
 
+def search_credentials(credentials: list[dict[str, str]]) -> None:
+    """Search for a credential by service name."""
+    service = input("Enter the service name to search: ").strip()
+    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
+
+    if not found_credentials:
+        print(f"No credentials found for service: {service}")
+    else:
+        for number, credential in enumerate(found_credentials, start=1):
+            print(f"{number}. Service: {credential['service']}, Username: {credential['username']}, Password: ********")
+
+
+def generate_password() -> str:
+    """Generate a random password."""
+    length = 12  # Default password length
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = "".join(secrets.choice(characters) for _ in range(length))
+    return password
+
+
 def main() -> None:
     """Run the menu until the user exits."""
     credentials = []
@@ -38,9 +62,10 @@ def main() -> None:
         elif choice == "2":
             list_credentials(credentials)
         elif choice == "3":
-            print("Search credentials is not implemented yet.")
+            search_credentials(credentials)
         elif choice == "4":
-            print("Password generation is not implemented yet.")
+            password = generate_password()
+            print(f"Generated password: {password}")
         elif choice == "0":
             print("Goodbye!")
             break
