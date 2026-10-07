@@ -58,16 +58,16 @@ def generate_password() -> str:
     return password
 
 
-def update_credential(credentials: list[dict[str, str]]) -> None:
-    """Update an existing credential."""
-    service = input("Enter the service name of the credential to update: ").strip()
+def select_credential(credentials: list[dict[str, str]]) -> dict[str, str] | None:
+    """Select an existing credential."""
+    service = input("Enter the service name of the credential: ").strip()
     if not service:
         print("Error: Service name is required.")
-        return
+        return None
     found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
     if not found_credentials:
         print(f"No credentials found for service: {service}")
-        return
+        return None
     elif len(found_credentials) == 1:
         credential = found_credentials[0]
     else:
@@ -75,14 +75,22 @@ def update_credential(credentials: list[dict[str, str]]) -> None:
         for i, cred in enumerate(found_credentials, start=1):
             print(f"  {i}. Username: {cred['username']}")
         try:
-            index = int(input("Enter the number of the credential to update: ")) - 1
+            index = int(input("Enter the number of the credential: ")) - 1
             if index < 0 or index >= len(found_credentials):
                 print("Not in the list.")
-                return
+                return None
             credential = found_credentials[index]
         except ValueError:
             print("Invalid selection.")
-            return
+            return None
+    return credential
+
+
+def update_credential(credentials: list[dict[str, str]]) -> None:
+    """Update an existing credential."""
+    credential = select_credential(credentials)
+    if not credential:
+        return
     print(f"Updating credential for service: {credential['service']}")
     new_username = input(f"Enter new username (leave blank to keep '{credential['username']}'): ").strip()
     new_password = input(f"Enter new password (leave blank to keep current password): ").strip()
@@ -96,59 +104,27 @@ def update_credential(credentials: list[dict[str, str]]) -> None:
 
 def view_credential(credentials: list[dict[str, str]]) -> None:
     """View a credential by service name."""
-    service = input("Enter the service name of the credential to view: ").strip()
-    if not service:
-        print("Error: Service name is required.")
-        return
-    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
-    if not found_credentials:
-        print(f"No credentials found for service: {service}")
-        return
-    elif len(found_credentials) == 1:
-        credential = found_credentials[0]
-    else:
-        print("Multiple credentials found for this service:")
-        for i, cred in enumerate(found_credentials, start=1):
-            print(f"  {i}. Username: {cred['username']}")
-        try:
-            index = int(input("Enter the number of the credential to view: ")) - 1
-            if index < 0 or index >= len(found_credentials):
-                print("Not in the list.")
-                return
-            credential = found_credentials[index]
-        except ValueError:
-            print("Invalid selection.")
-            return
-    print(f"Service: {credential['service']}, Username: {credential['username']}, Password: {credential['password']}")
+    credential = select_credential(credentials)
+    if credential:
+        print(f"Service: {credential['service']}, Username: {credential['username']}, Password: {credential['password']}")
 
 
 def delete_credential(credentials: list[dict[str, str]]) -> None:
     """Delete a credential by service name."""
-    service = input("Enter the service name of the credential to delete: ").strip()
-    if not service:
-        print("Error: Service name is required.")
-        return
-    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
-    if not found_credentials:
-        print(f"No credentials found for service: {service}")
-        return
-    elif len(found_credentials) == 1:
-        credential = found_credentials[0]
-    else:
-        print("Multiple credentials found for this service:")
-        for i, cred in enumerate(found_credentials, start=1):
-            print(f"  {i}. Username: {cred['username']}")
-        try:
-            index = int(input("Enter the number of the credential to delete: ")) - 1
-            if index < 0 or index >= len(found_credentials):
-                print("Not in the list.")
+    credential = select_credential(credentials)
+    if credential:
+        while True:
+            confirmation = input(f"Are you sure you want to delete the credential for '{credential['service']}'? (y/n): ").strip().lower()
+            if confirmation in ('y', 'yes'):
+                break
+            elif confirmation in ('n', 'no'):
+                print("Deletion cancelled.")
                 return
-            credential = found_credentials[index]
-        except ValueError:
-            print("Invalid selection.")
-            return
-    credentials.remove(credential)
-    print(f"Credential for service '{credential['service']}' deleted successfully.")
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+        credentials.remove(credential)
+        print(f"Credential for service '{credential['service']}' deleted successfully.")
+
 
 def main() -> None:
     """Run the menu until the user exits."""
