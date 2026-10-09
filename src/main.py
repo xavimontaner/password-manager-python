@@ -71,7 +71,15 @@ def search_credentials(credentials: list[dict[str, str]]) -> None:
 
 def generate_password() -> str:
     """Generate a random password."""
-    length = 12  # Default password length
+    while True:
+        try:
+            length = int(input("Enter the desired password length (minimum 8): "))
+            if length < 8:
+                print("Password length must be at least 8 characters.")
+                continue
+            break
+        except ValueError:
+            print("Invalid input. Please enter a number.")
     characters = string.ascii_letters + string.digits + string.punctuation
     password = "".join(secrets.choice(characters) for _ in range(length))
     return password
