@@ -39,13 +39,37 @@ def add_credential(credentials: list[dict[str, str]]) -> None:
     service = input("Enter the service name: ").strip()
     username = input("Enter the username: ").strip()
     password = input("Enter the password: ").strip()
+    url = input("Enter the URL (optional): ").strip()
+    notes = input("Enter any notes (optional): ").strip()
 
     if not service or not username or not password:
-        print("Error: All fields are required.")
+        print("Error: Service, username, and password are required.")
         return
 
-    credentials.append({"service": service, "username": username, "password": password})
+    credentials.append(
+        {
+            "service": service,
+            "username": username,
+            "password": password,
+            "url": url,
+            "notes": notes
+        }
+    )
     print(f"Credential for {service} added successfully.")
+
+
+def display_credential(credential: dict[str, str], number: int | None, show_password: bool) -> None:
+    """Display the details of a single credential."""
+    if number is not None:
+        print(f"{number}.")
+    print(f"Service: {credential['service']}")
+    print(f"Username: {credential['username']}")
+    if show_password:
+        print(f"Password: {credential['password']}")
+    else:
+        print(f"Password: ********")
+    print(f"URL: {credential.get('url', 'N/A')}")
+    print(f"Notes: {credential.get('notes', 'N/A')}")
 
 
 def list_credentials(credentials: list[dict[str, str]]) -> None:
@@ -54,7 +78,7 @@ def list_credentials(credentials: list[dict[str, str]]) -> None:
         print("No credentials stored.")
     else:
         for number, credential in enumerate(credentials, start=1):
-            print(f"{number}. Service: {credential['service']}, Username: {credential['username']}, Password: ********")
+            display_credential(credential, number, False)
 
 
 def search_credentials(credentials: list[dict[str, str]]) -> None:
@@ -66,7 +90,7 @@ def search_credentials(credentials: list[dict[str, str]]) -> None:
         print(f"No credentials found for service: {service}")
     else:
         for number, credential in enumerate(found_credentials, start=1):
-            print(f"{number}. Service: {credential['service']}, Username: {credential['username']}, Password: ********")
+            display_credential(credential, number, False)
 
 
 def generate_password() -> str:
@@ -129,10 +153,16 @@ def update_credential(credentials: list[dict[str, str]]) -> None:
     print(f"Updating credential for service: {credential['service']}")
     new_username = input(f"Enter new username (leave blank to keep '{credential['username']}'): ").strip()
     new_password = input(f"Enter new password (leave blank to keep current password): ").strip()
+    new_url = input(f"Enter new URL (leave blank to keep '{credential.get('url', 'N/A')}'): ").strip()
+    new_notes = input(f"Enter new notes (leave blank to keep '{credential.get('notes', 'N/A')}'): ").strip()
     if new_username:
         credential['username'] = new_username
     if new_password:
         credential['password'] = new_password
+    if new_url:
+        credential['url'] = new_url
+    if new_notes:
+        credential['notes'] = new_notes
 
     print("Credential updated successfully.")
 
@@ -141,7 +171,7 @@ def view_credential(credentials: list[dict[str, str]]) -> None:
     """View a credential by service name."""
     credential = select_credential(credentials)
     if credential:
-        print(f"Service: {credential['service']}, Username: {credential['username']}, Password: {credential['password']}")
+        display_credential(credential, None, True)
 
 
 def delete_credential(credentials: list[dict[str, str]]) -> None:
