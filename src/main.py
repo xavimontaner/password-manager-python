@@ -1,6 +1,12 @@
 import json
 import secrets
 import string
+from datetime import datetime
+
+
+def current_timestamp() -> str:
+    """Return the current local date and time in a readable format."""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def display_menu() -> None:
@@ -46,19 +52,26 @@ def add_credential(credentials: list[dict[str, str]]) -> None:
         print("Error: Service, username, and password are required.")
         return
 
+    timestamp = current_timestamp()
     credentials.append(
         {
             "service": service,
             "username": username,
             "password": password,
             "url": url,
-            "notes": notes
+            "notes": notes,
+            "created_at": timestamp,
+            "modified_at": timestamp,
         }
     )
     print(f"Credential for {service} added successfully.")
 
 
-def display_credential(credential: dict[str, str], number: int | None, show_password: bool) -> None:
+def display_credential(
+    credential: dict[str, str],
+    number: int | None,
+    show_password: bool,
+) -> None:
     """Display the details of a single credential."""
     if number is not None:
         print(f"{number}.")
@@ -68,8 +81,10 @@ def display_credential(credential: dict[str, str], number: int | None, show_pass
         print(f"Password: {credential['password']}")
     else:
         print(f"Password: ********")
-    print(f"URL: {credential.get('url', 'N/A')}")
-    print(f"Notes: {credential.get('notes', 'N/A')}")
+    print(f"URL: {credential.get('url') or 'N/A'}")
+    print(f"Notes: {credential.get('notes') or 'N/A'}")
+    print(f"Created At: {credential.get('created_at', 'N/A')}")
+    print(f"Modified At: {credential.get('modified_at', 'N/A')}")
 
 
 def list_credentials(credentials: list[dict[str, str]]) -> None:
@@ -151,20 +166,28 @@ def update_credential(credentials: list[dict[str, str]]) -> None:
     if not credential:
         return
     print(f"Updating credential for service: {credential['service']}")
+    was_updated = False
     new_username = input(f"Enter new username (leave blank to keep '{credential['username']}'): ").strip()
     new_password = input(f"Enter new password (leave blank to keep current password): ").strip()
-    new_url = input(f"Enter new URL (leave blank to keep '{credential.get('url', 'N/A')}'): ").strip()
-    new_notes = input(f"Enter new notes (leave blank to keep '{credential.get('notes', 'N/A')}'): ").strip()
+    new_url = input(f"Enter new URL (leave blank to keep '{credential.get('url') or 'N/A'}'): ").strip()
+    new_notes = input(f"Enter new notes (leave blank to keep '{credential.get('notes') or 'N/A'}'): ").strip()
     if new_username:
         credential['username'] = new_username
+        was_updated = True
     if new_password:
         credential['password'] = new_password
+        was_updated = True
     if new_url:
         credential['url'] = new_url
+        was_updated = True
     if new_notes:
         credential['notes'] = new_notes
-
-    print("Credential updated successfully.")
+        was_updated = True
+    if was_updated:
+        credential['modified_at'] = current_timestamp()
+        print("Credential updated successfully.")
+    else:
+        print("No changes made.")
 
 
 def view_credential(credentials: list[dict[str, str]]) -> None:
