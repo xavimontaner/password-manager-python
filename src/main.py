@@ -1,3 +1,4 @@
+import json
 import secrets
 import string
 
@@ -13,6 +14,24 @@ def display_menu() -> None:
     print("6. View credential")
     print("7. Delete credential")
     print("0. Exit")
+
+
+def load_credentials() -> list[dict[str, str]]:
+    """Load credentials from a file"""
+    try:
+        with open("credentials.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError:
+        print("Credentials file is corrupted. Starting with an empty list.")
+        return []
+
+
+def save_credentials(credentials: list[dict[str, str]]) -> None:
+    """Save credentials to a file"""
+    with open("credentials.json", "w") as file:
+        json.dump(credentials, file, indent=4)
 
 
 def add_credential(credentials: list[dict[str, str]]) -> None:
@@ -128,13 +147,14 @@ def delete_credential(credentials: list[dict[str, str]]) -> None:
 
 def main() -> None:
     """Run the menu until the user exits."""
-    credentials = []
+    credentials = load_credentials()
     while True:
         display_menu()
         choice = input("Choose an option: ").strip()
 
         if choice == "1":
             add_credential(credentials)
+            save_credentials(credentials)
         elif choice == "2":
             list_credentials(credentials)
         elif choice == "3":
@@ -144,10 +164,12 @@ def main() -> None:
             print(f"Generated password: {password}")
         elif choice == "5":
             update_credential(credentials)
+            save_credentials(credentials)
         elif choice == "6":
             view_credential(credentials)
         elif choice == "7":
             delete_credential(credentials)
+            save_credentials(credentials)
         elif choice == "0":
             print("Goodbye!")
             break
