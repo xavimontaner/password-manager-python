@@ -80,8 +80,16 @@ def generate_password() -> str:
             break
         except ValueError:
             print("Invalid input. Please enter a number.")
+    lowercase = secrets.choice(string.ascii_lowercase)
+    uppercase = secrets.choice(string.ascii_uppercase)
+    digit = secrets.choice(string.digits)
+    punctuation = secrets.choice(string.punctuation)
     characters = string.ascii_letters + string.digits + string.punctuation
-    password = "".join(secrets.choice(characters) for _ in range(length))
+    password_list = [lowercase, uppercase, digit, punctuation]
+    for _ in range(length - 4):
+        password_list.append(secrets.choice(characters))
+    secrets.SystemRandom().shuffle(password_list)
+    password = "".join(password_list)
     return password
 
 
