@@ -33,7 +33,7 @@ A beginner-friendly command-line password manager built in Python. This project 
 From the `password-manager-python` directory:
 
 ```powershell
-py src/main.py
+py -m src.main
 ```
 
 ## Run the tests

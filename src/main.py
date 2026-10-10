@@ -2,6 +2,7 @@ import json
 import secrets
 import string
 from datetime import datetime
+from src.models import Credential
 
 
 def current_timestamp() -> str:
@@ -22,11 +23,12 @@ def display_menu() -> None:
     print("0. Exit")
 
 
-def load_credentials() -> list[dict[str, str]]:
+def load_credentials() -> list[Credential]:
     """Load credentials from a file"""
     try:
         with open("credentials.json", "r") as file:
-            return json.load(file)
+            credential_data = json.load(file)
+            return [Credential(**data) for data in credential_data]
     except FileNotFoundError:
         return []
     except json.JSONDecodeError:
@@ -34,13 +36,17 @@ def load_credentials() -> list[dict[str, str]]:
         return []
 
 
-def save_credentials(credentials: list[dict[str, str]]) -> None:
+def save_credentials(credentials: list[Credential]) -> None:
     """Save credentials to a file"""
     with open("credentials.json", "w") as file:
-        json.dump(credentials, file, indent=4)
+        json.dump(
+            [credential.to_dict() for credential in credentials],
+            file,
+            indent=4,
+        )
 
 
-def add_credential(credentials: list[dict[str, str]]) -> None:
+def add_credential(credentials: list[Credential]) -> None:
     """Add a new credential to the password manager and manage empty input."""
     service = input("Enter the service name: ").strip()
     username = input("Enter the username: ").strip()
@@ -54,40 +60,40 @@ def add_credential(credentials: list[dict[str, str]]) -> None:
 
     timestamp = current_timestamp()
     credentials.append(
-        {
-            "service": service,
-            "username": username,
-            "password": password,
-            "url": url,
-            "notes": notes,
-            "created_at": timestamp,
-            "modified_at": timestamp,
-        }
+        Credential(
+            service=service,
+            username=username,
+            password=password,
+            url=url,
+            notes=notes,
+            created_at=timestamp,
+            modified_at=timestamp,
+        )
     )
     print(f"Credential for {service} added successfully.")
 
 
 def display_credential(
-    credential: dict[str, str],
+    credential: Credential,
     number: int | None,
     show_password: bool,
 ) -> None:
     """Display the details of a single credential."""
     if number is not None:
         print(f"{number}.")
-    print(f"Service: {credential['service']}")
-    print(f"Username: {credential['username']}")
+    print(f"Service: {credential.service}")
+    print(f"Username: {credential.username}")
     if show_password:
-        print(f"Password: {credential['password']}")
+        print(f"Password: {credential.password}")
     else:
         print(f"Password: ********")
-    print(f"URL: {credential.get('url') or 'N/A'}")
-    print(f"Notes: {credential.get('notes') or 'N/A'}")
-    print(f"Created At: {credential.get('created_at', 'N/A')}")
-    print(f"Modified At: {credential.get('modified_at', 'N/A')}")
+    print(f"URL: {credential.url or 'N/A'}")
+    print(f"Notes: {credential.notes or 'N/A'}")
+    print(f"Created At: {credential.created_at or 'N/A'}")
+    print(f"Modified At: {credential.modified_at or 'N/A'}")
 
 
-def list_credentials(credentials: list[dict[str, str]]) -> None:
+def list_credentials(credentials: list[Credential]) -> None:
     """List all stored credentials."""
     if not credentials:
         print("No credentials stored.")
@@ -96,10 +102,10 @@ def list_credentials(credentials: list[dict[str, str]]) -> None:
             display_credential(credential, number, False)
 
 
-def search_credentials(credentials: list[dict[str, str]]) -> None:
+def search_credentials(credentials: list[Credential]) -> None:
     """Search for a credential by service name."""
     service = input("Enter the service name to search: ").strip()
-    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
+    found_credentials = [cred for cred in credentials if cred.service.lower() == service.lower()]
 
     if not found_credentials:
         print(f"No credentials found for service: {service}")
@@ -132,13 +138,13 @@ def generate_password() -> str:
     return password
 
 
-def select_credential(credentials: list[dict[str, str]]) -> dict[str, str] | None:
+def select_credential(credentials: list[Credential]) -> Credential | None:
     """Select an existing credential."""
     service = input("Enter the service name of the credential: ").strip()
     if not service:
         print("Error: Service name is required.")
         return None
-    found_credentials = [cred for cred in credentials if cred["service"].lower() == service.lower()]
+    found_credentials = [cred for cred in credentials if cred.service.lower() == service.lower()]
     if not found_credentials:
         print(f"No credentials found for service: {service}")
         return None
@@ -147,7 +153,7 @@ def select_credential(credentials: list[dict[str, str]]) -> dict[str, str] | Non
     else:
         print("Multiple credentials found for this service:")
         for i, cred in enumerate(found_credentials, start=1):
-            print(f"  {i}. Username: {cred['username']}")
+            print(f"  {i}. Username: {cred.username}")
         try:
             index = int(input("Enter the number of the credential: ")) - 1
             if index < 0 or index >= len(found_credentials):
@@ -160,49 +166,49 @@ def select_credential(credentials: list[dict[str, str]]) -> dict[str, str] | Non
     return credential
 
 
-def update_credential(credentials: list[dict[str, str]]) -> None:
+def update_credential(credentials: list[Credential]) -> None:
     """Update an existing credential."""
     credential = select_credential(credentials)
     if not credential:
         return
-    print(f"Updating credential for service: {credential['service']}")
+    print(f"Updating credential for service: {credential.service}")
     was_updated = False
-    new_username = input(f"Enter new username (leave blank to keep '{credential['username']}'): ").strip()
+    new_username = input(f"Enter new username (leave blank to keep '{credential.username}'): ").strip()
     new_password = input(f"Enter new password (leave blank to keep current password): ").strip()
-    new_url = input(f"Enter new URL (leave blank to keep '{credential.get('url') or 'N/A'}'): ").strip()
-    new_notes = input(f"Enter new notes (leave blank to keep '{credential.get('notes') or 'N/A'}'): ").strip()
+    new_url = input(f"Enter new URL (leave blank to keep '{credential.url or 'N/A'}'): ").strip()
+    new_notes = input(f"Enter new notes (leave blank to keep '{credential.notes or 'N/A'}'): ").strip()
     if new_username:
-        credential['username'] = new_username
+        credential.username = new_username
         was_updated = True
     if new_password:
-        credential['password'] = new_password
+        credential.password = new_password
         was_updated = True
     if new_url:
-        credential['url'] = new_url
+        credential.url = new_url
         was_updated = True
     if new_notes:
-        credential['notes'] = new_notes
+        credential.notes = new_notes
         was_updated = True
     if was_updated:
-        credential['modified_at'] = current_timestamp()
+        credential.modified_at = current_timestamp()
         print("Credential updated successfully.")
     else:
         print("No changes made.")
 
 
-def view_credential(credentials: list[dict[str, str]]) -> None:
+def view_credential(credentials: list[Credential]) -> None:
     """View a credential by service name."""
     credential = select_credential(credentials)
     if credential:
         display_credential(credential, None, True)
 
 
-def delete_credential(credentials: list[dict[str, str]]) -> None:
+def delete_credential(credentials: list[Credential]) -> None:
     """Delete a credential by service name."""
     credential = select_credential(credentials)
     if credential:
         while True:
-            confirmation = input(f"Are you sure you want to delete the credential for '{credential['service']}'? (y/n): ").strip().lower()
+            confirmation = input(f"Are you sure you want to delete the credential for '{credential.service}'? (y/n): ").strip().lower()
             if confirmation in ('y', 'yes'):
                 break
             elif confirmation in ('n', 'no'):
@@ -211,7 +217,7 @@ def delete_credential(credentials: list[dict[str, str]]) -> None:
             else:
                 print("Invalid input. Please enter 'y' or 'n'.")
         credentials.remove(credential)
-        print(f"Credential for service '{credential['service']}' deleted successfully.")
+        print(f"Credential for service '{credential.service}' deleted successfully.")
 
 
 def main() -> None:
